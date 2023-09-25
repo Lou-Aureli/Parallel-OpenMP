@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include "omp.h"
 
 void print_mesh(std::vector<std::vector<float>>);
 void print_mesh_csv(std::vector<std::vector<float>> mesh);
@@ -11,9 +12,11 @@ void print_mesh_csv(std::vector<std::vector<float>> mesh);
 int main()
 {
     std::string line;
+    double start, end;
     int X_max, Y_max, time;
     std::vector<std::vector<float>> mesh;
 
+    start = omp_get_wtime();
     printf("Please enter all in one line: X_max, Y_max, time_steps> ");
     getline(std::cin, line);
     std::stringstream ss(line);
@@ -31,9 +34,9 @@ int main()
     }
 
         // If no initial grid is specified then make a default one.
-    if((int)mesh.size() == 0)
+    if((int)mesh.size() < X_max)
     {
-        for(int i = 0; i < X_max; ++i)
+        for(int i = (int)mesh.size(); i < X_max; ++i)
         {
             std::vector<float> tmp;
             for(int j = 0; j < Y_max; ++j)
@@ -46,13 +49,15 @@ int main()
             mesh.push_back(tmp);
         }
     }
+    end = omp_get_wtime();
+    printf("Initialization TIME %.5fs\n", end - start);
 
-    printf("Inital Matrix:\n");
-    print_mesh(mesh);
+    //printf("Inital Matrix:\n");
+    //print_mesh(mesh);
+
 
     int i, j, r, b;
-    r = 1;
-    b = 2;
+    start = omp_get_wtime();
     for(i = 0; i < time; ++i)
     {
         if(i % 2 == 0)
@@ -90,7 +95,9 @@ int main()
             }
         }
     }
+    end = omp_get_wtime();
 
+    printf("Red+Black TIME %.5fs\n", end - start);
     printf("\nFinalized Matrix:\n");
     print_mesh(mesh);
 
