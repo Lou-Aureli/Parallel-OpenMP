@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <sstream>
 #include <vector>
@@ -18,7 +19,7 @@ int main()
     getline(std::cin, line);
     std::stringstream ss(line);
     ss >> X_max >> Y_max >> time;
-    
+
     printf("Please enter each row of the matrix (ctrl+D to stop):\n");
     while(getline(std::cin, line))
     {
@@ -47,8 +48,8 @@ int main()
         }
     }
 
-    printf("Inital Matrix:\n");
-    print_mesh(mesh);
+    //printf("Inital Matrix:\n");
+    //print_mesh(mesh);
 
     int i, j, r, b;
     r = 1;
@@ -102,7 +103,7 @@ void print_mesh(std::vector<std::vector<float>> mesh)
     for(int i = 0; i < (int)mesh.size(); ++i)
     {
         for(int j = 0; j < (int)mesh[i].size(); ++j)
-            printf("%.2f ", mesh[i][j]);
+            std::cout << std::setw(5) << std::setprecision(3) << mesh[i][j] << " ";
         printf("\n");
     }
     return;

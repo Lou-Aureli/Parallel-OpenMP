@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <sstream>
 #include <vector>
@@ -9,12 +10,23 @@
 void print_mesh(std::vector<std::vector<float>>);
 void print_mesh_csv(std::vector<std::vector<float>> mesh);
 
-int main()
+int main(int argc, char** argv)
 {
     std::string line;
     double start, end;
+    int num_thread = 2;
     int X_max, Y_max, time;
     std::vector<std::vector<float>> mesh;
+
+    if(argc > 2)
+    {
+        printf("usage: ./myocean_omp [num_threads, DEFAULT=2] [OPT: < myocean.in]");
+        exit(0);
+    }
+    else
+        num_thread = std::stoi(argv[1]);
+    
+    omp_set_num_threads(num_thread);
 
     start = omp_get_wtime();
     printf("Please enter all in one line: X_max, Y_max, time_steps> ");
@@ -55,18 +67,17 @@ int main()
     //printf("Inital Matrix:\n");
     //print_mesh(mesh);
 
-
     int i, j, r, b;
     start = omp_get_wtime();
     for(i = 0; i < time; ++i)
     {
         if(i % 2 == 0)
         {
+            #pragma omp parallel for
             for(j = 1; j < (int)mesh.size()-1; ++j)
             {
-                if(j % 2 == 0) r = 1;
-                else           r = 2;
-                for(; r < (int)mesh[j].size()-1; r += 2)
+                #pragma omp parallel for
+                for(r = j % 2 + 1; r < (int)mesh[j].size()-1; r += 2)
                 {
                     float north, south, east, west;
                     north = mesh[j-1][r];
@@ -79,11 +90,11 @@ int main()
         }
         else
         {
+            #pragma omp parallel for
             for(j = 1; j < (int)mesh.size()-1; ++j)
             {
-                if(j % 2 == 0) b = 2;
-                else           b = 1;
-                for(; b < (int)mesh[j].size()-1; b += 2)
+                #pragma omp parallel for
+                for(b = 2 - j % 2; b < (int)mesh[j].size()-1; b += 2)
                 {
                     float north, south, east, west;
                     north = mesh[j-1][b];
@@ -98,8 +109,8 @@ int main()
     end = omp_get_wtime();
 
     printf("Red+Black TIME %.5fs\n", end - start);
-    printf("\nFinalized Matrix:\n");
-    print_mesh(mesh);
+    //printf("\nFinalized Matrix:\n");
+    //print_mesh(mesh);
 
     return 0;
 }
@@ -109,7 +120,7 @@ void print_mesh(std::vector<std::vector<float>> mesh)
     for(int i = 0; i < (int)mesh.size(); ++i)
     {
         for(int j = 0; j < (int)mesh[i].size(); ++j)
-            printf("%.2f ", mesh[i][j]);
+            std::cout << std::setw(5) << std::setprecision(3) << mesh[i][j] << " ";
         printf("\n");
     }
     return;
