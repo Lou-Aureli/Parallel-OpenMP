@@ -1,8 +1,8 @@
 CFLAGS	= -g -Wall
-CC	= gcc $(CFLAGS)
+CC	= g++ $(CFLAGS)
 
 all:
-	gcc -fopenmp -o myocean myocean.c
+	g++ -fopenmp -o myocean myocean.cpp
 
 clean:
 	rm -rf myocean
