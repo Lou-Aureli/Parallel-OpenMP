@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <algorithm>
 #include <sstream>
 #include <vector>
@@ -94,6 +95,7 @@ int main()
 
     printf("\nFinalized Matrix:\n");
     print_mesh(mesh);
+    print_mesh_csv(mesh);
 
     return 0;
 }
@@ -111,12 +113,17 @@ void print_mesh(std::vector<std::vector<float>> mesh)
 
 void print_mesh_csv(std::vector<std::vector<float>> mesh)
 {
+    std::fstream fs;
+    fs.open("mesh.csv", std::fstream::out);
     for(int i = 0; i < (int)mesh.size(); ++i)
     {
         printf("%.2f,", mesh[i][0]);
+        fs << std::setprecision(3) << mesh[i][0];
         for(int j = 1; j < (int)mesh[i].size(); ++j)
-            printf(",%.2f", mesh[i][j]);
+            fs << std::setprecision(3) << "," << mesh[i][j];
         printf("\n");
+        fs << "\n";
     }
+    fs.close();
     return;
 }
