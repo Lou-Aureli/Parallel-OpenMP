@@ -54,6 +54,7 @@
         "iomanip": "cpp",
         "xlocmon": "cpp",
         "xloctime": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "omp.h": "c"
     }
 }

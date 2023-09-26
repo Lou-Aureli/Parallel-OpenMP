@@ -1,3 +1,24 @@
+/*
+    Author: Fazrian Prawiranata
+    Date: 09/26/23
+    Notes:  usage: ./myocean_c [num_threads, default = 2] < [RECOMENDED myocean.in[.short]]
+            - RECOMENDED TO PIPE IN AN INPUT FILE OF THE FOLLOWING FORMAT
+            |-> XMAX YMAX STEPS 
+                I00 I01 I02 ...
+                I10 I11 I12 ...
+                ...
+            - This is the parallelized version of the program
+            - In the specifed number of time steps, the program will average the
+              NON-border values with itself and the values to the north south east
+              and west.
+            - However, we will do this with the Red-Black approach that will help
+              parallelize it later. On even time step, red values will be averaged
+              and on odd time steps, black values will be averaged.
+            - This will utilize OpenMP to parallelize the program with the user
+              specified (or default of 2) number of threads. This will also time
+              how long each part of the process takes to complete.
+*/
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>

@@ -1,3 +1,21 @@
+/*
+    Author: Fazrian Prawiranata
+    Date: 09/26/23
+    Notes:  usage: ./myocean_c < [RECOMENDED myocean.in[.short]]
+            - RECOMENDED TO PIPE IN AN INPUT FILE OF THE FOLLOWING FORMAT
+            |-> XMAX YMAX STEPS 
+                I00 I01 I02 ...
+                I10 I11 I12 ...
+                ...
+            - This is the sequential version of the program
+            - In the specifed number of time steps, the program will average the
+              NON-border values with itself and the values to the north south east
+              and west.
+            - However, we will do this with the Red-Black approach that will help
+              parallelize it later. On even time step, red values will be averaged
+              and on odd time steps, black values will be averaged.
+*/
+
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
