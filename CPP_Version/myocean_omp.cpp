@@ -123,12 +123,18 @@ int main(int argc, char** argv)
                 }
             }
         }
+
+        if(i % 30 == 0)
+        {
+            printf("\nMatrix at %d/%d:\n", i, time);
+            print_mesh(mesh);
+        }
     }
     end = omp_get_wtime();
+    printf("\nFinalized Matrix:\n");
+    print_mesh(mesh);
 
     printf("Red+Black TIME %.5fs\n", end - start);
-    //printf("\nFinalized Matrix:\n");
-    //print_mesh(mesh);
 
     return 0;
 }

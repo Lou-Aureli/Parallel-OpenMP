@@ -112,11 +112,19 @@ int main(int argc, char** argv)
                 }
             }
         }
+
+        if(i % 30 == 0)
+        {
+            printf("\nMatrix at %d/%d:\n", i, time);
+            print_mesh(mesh, X_max, Y_max);
+        }
     }
     end = omp_get_wtime();
-    printf("Red+Black TIME %.5fs\n", end - start);
+    
+    printf("\nFinalized Matrix:\n");
+    print_mesh(mesh, X_max, Y_max);
 
-    //print_mesh(mesh, X_max, Y_max);
+    printf("\nRed+Black TIME %.5fs\n", end - start);
 
     for(int i = 0; i < X_max; ++i) free(mesh[i]);
     free(mesh);
@@ -128,26 +136,7 @@ void print_mesh(float** mesh, int X_max, int Y_max)
     for(int i = 0; i < X_max; ++i)
     {
         for(int j = 0; j < Y_max; ++j)
-            printf("%.2f ", mesh[i][j]);
+            printf("%*.2f ", 7, mesh[i][j]);
         printf("\n");
     }
 }
-
-/*
-        // If no initial grid is specified then make a default one.
-    if((int)mesh.size() == 0)
-    {
-        for(int i = 0; i < X_max; ++i)
-        {
-            std::vector<float> tmp;
-            for(int j = 0; j < Y_max; ++j)
-            {
-                if(j == Y_max - 1 || i == X_max - 1)
-                    tmp.push_back(100.0);
-                else
-                    tmp.push_back(1.0);
-            }
-            mesh.push_back(tmp);
-        }
-    }
-*/
