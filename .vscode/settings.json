@@ -55,6 +55,7 @@
         "xlocmon": "cpp",
         "xloctime": "cpp",
         "fstream": "cpp",
-        "omp.h": "c"
+        "omp.h": "c",
+        "stdio.h": "c"
     }
 }
