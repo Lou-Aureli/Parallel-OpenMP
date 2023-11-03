@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <mpi.h>
+#include "mpi.h"
 
 void print_mesh(float **, int, int);
 
@@ -37,15 +37,11 @@ int main(int argc, char** argv)
     }
     else
         num_threads = atoi(argv[1]);
-    
-    omp_set_num_threads(num_threads);
 
     char line[1000];
     int X_max, Y_max, time;
     float** mesh;
     double start, end;
-
-    start = omp_get_wtime();
     printf("Please enter all in one line: X_max, Y_max, time_steps> ");
     fscanf(stdin, "%d %d %d", &X_max, &Y_max, &time);
 
@@ -69,21 +65,20 @@ int main(int argc, char** argv)
         }
         row += 1;
     }
-    end = omp_get_wtime();
-    printf("Initialization TIME %.5fs\n", end - start);
 
     int i, j, r, b;
     r = 1;
     b = 2;
-    start = omp_get_wtime();
+
+    MPI_Initialize(argc, argv);
     for(i = 0; i < time; ++i)
     {
         if(i % 2 == 0)
         {
-            #pragma omp parallel for
+            float* row_buff;
+            MPI_Scatter(&(mesh[0][0]), Y_max/num_threads, MPI_FLOAT, row_buff, Y_max/num_threads, MPI_FLOAT, 0, MPI_COMM_WORLD);
             for(j = 1; j < X_max-1; ++j)
             {
-                #pragma omp parallel for
                 for(r = j % 2 + 1; r < Y_max-1; r += 2)
                 {
                     float north, south, east, west;
@@ -97,10 +92,10 @@ int main(int argc, char** argv)
         }
         else
         {
-            #pragma omp parallel for
+            float* row_buff;
+            MPI_Scatter(&(mesh[0][0]), Y_max/num_threads, MPI_FLOAT, row_buff, Y_max/num_threads, MPI_FLOAT, 0, MPI_COMM_WORLD);
             for(j = 1; j < X_max-1; ++j)
             {
-                #pragma omp parallel for
                 for(b = 2 - j % 2; b < Y_max-1; b += 2)
                 {
                     float north, south, east, west;
@@ -119,12 +114,9 @@ int main(int argc, char** argv)
             print_mesh(mesh, X_max, Y_max);
         }
     }
-    end = omp_get_wtime();
-    
+    MPI_Finalize();
     printf("\nFinalized Matrix:\n");
     print_mesh(mesh, X_max, Y_max);
-
-    printf("\nRed+Black TIME %.5fs\n", end - start);
 
     for(int i = 0; i < X_max; ++i) free(mesh[i]);
     free(mesh);
