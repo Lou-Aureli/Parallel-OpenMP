@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <mpi.h>
 
+int time = 0;
+
 void print_mesh(float **, int, int);
 
 int main(int argc, char** argv)
@@ -34,75 +36,92 @@ int main(int argc, char** argv)
         exit(0);
     }
 
-    float* mesh;
-    char line[1000];
-    int X_max, Y_max, time;
-    printf("Please enter all in one line: X_max, Y_max, time_steps> ");
-    fscanf(stdin, "%d %d %d", &X_max, &Y_max, &time);
-    printf("%d %d %d\n", X_max, Y_max, time);
-
-    mesh = malloc(sizeof(float*) * X_max * Y_max);
-
-    int count;
-    float tmp;
-    count = 0;
-    printf("Please enter each row of the matrix (ctrl+D to stop):\n");
-    while(fscanf(stdin, "%f", &tmp) != EOF && count++ < (X_max*Y_max))
-        mesh[count] = tmp;
-
-    int i, j, r, b;
-    r = 1;
-    b = 2;
-
     int rank, size;
+    int X_max, Y_max, max_time;
     MPI_Initialize(argc, argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);  
 
-    float* row;
-    row = malloc(sizeof(float) * Y_max);
-    for(i = 0; i < time; ++i)
+    float** mesh;
+    if(rank == 0)
     {
-        if(i % 2 == 0)
-        {
-            for(j = 1; j < X_max-1; ++j)
-            {
-                for(r = j % 2 + 1; r < Y_max-1; r += 2)
-                {
-                    float north, south, east, west;
-                    north = mesh[j-1][r];
-                    south = mesh[j+1][r];
-                    east = mesh[j][r+1];
-                    west = mesh[j][r-1];
-                    mesh[j][r] = (north + south + east + west + mesh[j][r])/5.0;
-                }
-            }
-        }
-        else
-        {
-            for(j = 1; j < X_max-1; ++j)
-            {
-                for(b = 2 - j % 2; b < Y_max-1; b += 2)
-                {
-                    float north, south, east, west;
-                    north = mesh[j-1][b];
-                    south = mesh[j+1][b];
-                    east = mesh[j][b+1];
-                    west = mesh[j][b-1];
-                    mesh[j][b] = (north + south + east + west + mesh[j][b])/5.0;
-                }
-            }
-        }
+        printf("Please enter all in one line: X_max, Y_max, time_steps> ");
+        fscanf(stdin, "%d %d %d", &X_max, &Y_max, &max_time);
+        printf("%d %d %d\n", X_max, Y_max, max_time);
 
-        if(i % 30 == 0)
+        char line[1000];
+        mesh = malloc(sizeof(float*) * X_max);
+        for(int i = 0; i < X_max; ++i) mesh[i] = malloc(sizeof(float) * Y_max);
+
+        float tmp;
+        int row, column;
+        row = column = 0;
+        printf("Please enter each row of the matrix (ctrl+D to stop):\n");
+        while(fscanf(stdin, "%f", &tmp) != EOF)
         {
-            printf("\nMatrix at %d/%d:\n", i, time);
-            print_mesh(mesh, X_max, Y_max);
+            column = 0;
+            mesh[row][column] = tmp;
+            for(column = 1; column < Y_max; ++column)
+            {
+                fscanf(stdin, "%f", &tmp);
+                mesh[row][column] = tmp;
+            }
+            row += 1;
         }
     }
+
+    if(rank == 0)
+    {
+        int i;
+        for(i = 1; i < size; ++i)
+            MPI_Send(mesh, X_max * Y_max, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
+        while(time < max_time);
+    }
+    else
+    {
+        int j, r, b;
+        while(time++ < max_time)
+        {
+            if(time % 2 == 0)
+            {
+                for(j = 1; j < X_max-1; ++j)
+                {
+                    for(r = j % 2 + 1; r < Y_max-1; r += 2)
+                    {
+                        float north, south, east, west;
+                        north = mesh[j-1][r];
+                        south = mesh[j+1][r];
+                        east = mesh[j][r+1];
+                        west = mesh[j][r-1];
+                        mesh[j][r] = (north + south + east + west + mesh[j][r])/5.0;
+                    }
+                }
+            }
+            else
+            {
+                for(j = 1; j < X_max-1; ++j)
+                {
+                    for(b = 2 - j % 2; b < Y_max-1; b += 2)
+                    {
+                        float north, south, east, west;
+                        north = mesh[j-1][b];
+                        south = mesh[j+1][b];
+                        east = mesh[j][b+1];
+                        west = mesh[j][b-1];
+                        mesh[j][b] = (north + south + east + west + mesh[j][b])/5.0;
+                    }
+                }
+            }
+
+            if(time % 30 == 0)
+            {
+                printf("\nMatrix at %d/%d:\n", i, time);
+                print_mesh(mesh, X_max, Y_max);
+            }
+        }
+    }
+
     MPI_Finalize();
-    printf("\nFinalized Matrix:\n");
-    print_mesh(mesh, X_max, Y_max);
 
     for(int i = 0; i < X_max; ++i) free(mesh[i]);
     free(mesh);
