@@ -22,61 +22,49 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "mpi.h"
+#include <mpi.h>
 
 void print_mesh(float **, int, int);
 
 int main(int argc, char** argv)
 {
-    int num_threads = 2;
-
     if(argc > 2)
     {
         printf("usage: ./myocean_omp [num_threads, DEFAULT=2] [REC: < myocean.in]");
         exit(0);
     }
-    else
-        num_threads = atoi(argv[1]);
 
+    float* mesh;
     char line[1000];
     int X_max, Y_max, time;
-    float** mesh;
-    double start, end;
     printf("Please enter all in one line: X_max, Y_max, time_steps> ");
     fscanf(stdin, "%d %d %d", &X_max, &Y_max, &time);
-
     printf("%d %d %d\n", X_max, Y_max, time);
 
-    mesh = malloc(sizeof(float*) * X_max);
-    for(int i = 0; i < X_max; ++i) mesh[i] = malloc(sizeof(float) * Y_max);
+    mesh = malloc(sizeof(float*) * X_max * Y_max);
 
+    int count;
     float tmp;
-    int row, column;
-    row = column = 0;
+    count = 0;
     printf("Please enter each row of the matrix (ctrl+D to stop):\n");
-    while(fscanf(stdin, "%f", &tmp) != EOF)
-    {
-        column = 0;
-        mesh[row][column] = tmp;
-        for(column = 1; column < Y_max; ++column)
-        {
-            fscanf(stdin, "%f", &tmp);
-            mesh[row][column] = tmp;
-        }
-        row += 1;
-    }
+    while(fscanf(stdin, "%f", &tmp) != EOF && count++ < (X_max*Y_max))
+        mesh[count] = tmp;
 
     int i, j, r, b;
     r = 1;
     b = 2;
 
+    int rank, size;
     MPI_Initialize(argc, argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    float* row;
+    row = malloc(sizeof(float) * Y_max);
     for(i = 0; i < time; ++i)
     {
         if(i % 2 == 0)
         {
-            float* row_buff;
-            MPI_Scatter(&(mesh[0][0]), Y_max/num_threads, MPI_FLOAT, row_buff, Y_max/num_threads, MPI_FLOAT, 0, MPI_COMM_WORLD);
             for(j = 1; j < X_max-1; ++j)
             {
                 for(r = j % 2 + 1; r < Y_max-1; r += 2)
@@ -92,8 +80,6 @@ int main(int argc, char** argv)
         }
         else
         {
-            float* row_buff;
-            MPI_Scatter(&(mesh[0][0]), Y_max/num_threads, MPI_FLOAT, row_buff, Y_max/num_threads, MPI_FLOAT, 0, MPI_COMM_WORLD);
             for(j = 1; j < X_max-1; ++j)
             {
                 for(b = 2 - j % 2; b < Y_max-1; b += 2)
