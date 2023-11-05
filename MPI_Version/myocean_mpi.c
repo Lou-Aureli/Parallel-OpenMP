@@ -36,9 +36,10 @@ int main(int argc, char** argv)
         exit(0);
     }
 
+    int i, j, r, b;
     int rank, size;
     int X_max, Y_max, max_time;
-    MPI_Initialize(argc, argv);
+    MPI_Init(&(argc), &(argv));
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);  
 
@@ -51,7 +52,7 @@ int main(int argc, char** argv)
 
         char line[1000];
         mesh = malloc(sizeof(float*) * X_max);
-        for(int i = 0; i < X_max; ++i) mesh[i] = malloc(sizeof(float) * Y_max);
+        for(i = 0; i < X_max; ++i) mesh[i] = malloc(sizeof(float) * Y_max);
 
         float tmp;
         int row, column;
@@ -72,14 +73,12 @@ int main(int argc, char** argv)
 
     if(rank == 0)
     {
-        int i;
         for(i = 1; i < size; ++i)
             MPI_Send(mesh, X_max * Y_max, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
         while(time < max_time);
     }
     else
     {
-        int j, r, b;
         while(time++ < max_time)
         {
             if(time % 2 == 0)
@@ -123,16 +122,20 @@ int main(int argc, char** argv)
 
     MPI_Finalize();
 
-    for(int i = 0; i < X_max; ++i) free(mesh[i]);
+    printf("\nFinalized Matrix:\n");
+    print_mesh(mesh, X_max, Y_max);
+
+    for(i = 0; i < X_max; ++i) free(mesh[i]);
     free(mesh);
     return 0;
 }
 
 void print_mesh(float** mesh, int X_max, int Y_max)
 {
-    for(int i = 0; i < X_max; ++i)
+    int i, j;
+    for(i = 0; i < X_max; ++i)
     {
-        for(int j = 0; j < Y_max; ++j)
+        for(j = 0; j < Y_max; ++j)
             printf("%*.2f ", 7, mesh[i][j]);
         printf("\n");
     }
