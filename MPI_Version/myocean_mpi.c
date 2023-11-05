@@ -38,23 +38,24 @@ int main(int argc, char** argv)
 
     int i, j, r, b;
     int rank, size;
+    MPI_Status stat;
     int X_max, Y_max, max_time;
     MPI_Init(&(argc), &(argv));
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);  
 
     float** mesh;
+    mesh = malloc(sizeof(float*) * X_max);
+    for(i = 0; i < X_max; ++i) mesh[i] = malloc(sizeof(float) * Y_max);
+
     if(rank == 0)
     {
         printf("Please enter all in one line: X_max, Y_max, time_steps> ");
         fscanf(stdin, "%d %d %d", &X_max, &Y_max, &max_time);
         printf("%d %d %d\n", X_max, Y_max, max_time);
 
-        char line[1000];
-        mesh = malloc(sizeof(float*) * X_max);
-        for(i = 0; i < X_max; ++i) mesh[i] = malloc(sizeof(float) * Y_max);
-
         float tmp;
+        char line[1000];
         int row, column;
         row = column = 0;
         printf("Please enter each row of the matrix (ctrl+D to stop):\n");
@@ -79,6 +80,7 @@ int main(int argc, char** argv)
     }
     else
     {
+        MPI_Recv(mesh, X_max * Y_max, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &stat);
         while(time++ < max_time)
         {
             if(time % 2 == 0)
